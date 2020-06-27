@@ -1,0 +1,142 @@
+---
+title: "Exam #2"
+author: "Braden Holt"
+date: "6/26/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#setwd
+setwd("C:/Users/Braden/Documents/Data Science/Exam2/exam2")
+
+# load packages
+library(tidyverse)
+library(rio)
+library(stargazer)
+library(data.table)
+library(labelled)
+library(WDI)
+
+
+```
+
+## Questions
+1. Clear Environment
+```{r, echo = TRUE}
+rm(list=ls(all = TRUE))
+```
+
+2. Load Data 
+```{r, echo = TRUE}
+inequality_data <- import("inequality.xlsx")
+```
+
+3. This is a cross sectional dataset because it captures a single observation for each variable.
+```{r, echo = TRUE}
+cross.sectional <- inequality_data$year != 2015
+print(cross.sectional)
+```
+
+6. It is better to have a lower inequality score because the more unequal country of the three, Brazil, has a higher score.
+```{r, echo = TRUE}
+inequality_gini_denmark <- subset(inequality_data, country == 'Denmark', select = inequality_gini)
+inequality_gini_sweden <- subset(inequality_data, country == 'Sweden', select = inequality_gini)
+inequality_gini_brazil <- subset(inequality_data, country == 'Brazil', select = inequality_gini)
+```
+
+10. Mean inequality_gini score is 36.81375
+```{r, echo = TRUE}
+mean(na.omit(inequality_data$inequality_gini))
+```
+
+
+11. If Else Commands and Dummy Variables
+```{r, message =  FALSE, warning = FALSE}
+inequality_data$high_inequality = NA
+inequality_data$low_inequality = NA
+
+inequality_data$high_inequality <-
+  if(inequality_data$inequality_gini > 36.81375){
+    inequaity_data$high_inequality = 1
+  } else if (inequality_data$inequality_gini < 36.81375) {
+    inequality_data$high_inequality = 0
+  }
+
+inequality_data$low_inequality <- 
+  if(inequality_data$inequality_gini < 36.81375){
+    inequality_data$low_inequality = 1
+  } else if (inequality_data$inequality_gini < 36.81375) {
+    inequality_data$low_inequality = 0
+  }
+```
+
+
+12. For Loop
+```{r, echo = TRUE}
+x <- c("The World Bank", "African Development Bank", "Bill and Melinda Gates Foundation")
+
+for(i in x){
+  print(x)
+}
+```
+
+
+14. Import WDI Data
+
+```{r, echo = TRUE}
+gdp_per_cap <- WDI(country = 'all',
+                       indicator = c('NY.GDP.PCAP.CD'),
+                       start = 2015,
+                       end = 2015, 
+                       cache = NULL,
+                       extra = FALSE)
+```
+
+16. Rename Variables
+```{r, echo = TRUE}
+setnames(gdp_per_cap, "NY.GDP.PCAP.CD", "GDP Per Capita")
+```
+
+17. Merge Data
+```{r, echo = FALSE}
+merged_df <- left_join(inequality_data, gdp_per_cap, keep = FALSE)
+```
+
+
+18. Remove Missing Data
+```{r, echo = TRUE}
+merged_df<- merged_df %>% 
+  dplyr::filter(!(inequality_gini == "NA"))
+```
+
+19. Keep Inequality Scores > 30
+```{r, echo = TRUE}
+data_greater_30 <- 
+  merged_df %>% 
+  dplyr::filter(inequality_gini > 30)
+
+```
+
+20. Sum of 'ai'
+```{r, echo = TRUE}
+sum(grep("ai", data_greater_30))
+```
+
+
+21. Apply Function
+```{r, echo = TRUE}
+sapply(data_greater_30$inequality_gini, sum)
+
+```
+
+22. Label
+```{r}
+var_label(merged_df) <- list('country' = "Country",
+                             'iso2c' = "ISO2C Country Code",
+                             'inequality_gini' = "Inequality Score",
+                             'year' = "Year",
+                             'high_inequality' = "High Inequality",
+                             'low_inequality' = "Low Inequality",
+                             'GDP Per Capita' = "GDP Per Capita")
+```
